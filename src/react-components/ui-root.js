@@ -161,7 +161,8 @@ class UIRoot extends Component {
     onLoaded: PropTypes.func,
     activeObject: PropTypes.object,
     selectedObject: PropTypes.object,
-    breakpoint: PropTypes.string
+    breakpoint: PropTypes.string,
+    locationHash: PropTypes.string
   };
 
   state = {
@@ -599,6 +600,12 @@ class UIRoot extends Component {
 
     // Push the new history state before going into VR, otherwise menu button will take us back
     clearHistoryState(this.props.history);
+
+    //restore hash
+    if (this.props.locationHash) {
+      console.log("restore stored hash", this.props.locationHash);
+      window.history.replaceState(null, null, document.location.href.split("#")[0] + this.props.locationHash);
+    }
 
     const muteOnEntry = this.props.store.state.preferences["muteMicOnEntry"] || false;
     this.props.store.update({
