@@ -1,4 +1,40 @@
 import configs from "./configs";
+
+// limit FPS by throttling tick for all components
+import "aframe";
+const { registerComponent, registerSystem } = AFRAME;
+let maxFPS = new URLSearchParams(location.search).get("max_fps");
+if (maxFPS && (maxFPS = parseInt(maxFPS)) && maxFPS > 0) {
+  AFRAME.registerSystem = (name, def) => {
+    if (def.tick && def.tick !== AFRAME.utils.throttleTick) {
+      const init = def.init;
+      def.init = function() {
+        if (init) {
+          init.apply(this, arguments);
+        }
+        if (this.tick !== AFRAME.utils.throttleTick) {
+          this.tick = AFRAME.utils.throttleTick(this.tick, 1000 / maxFPS, this);
+        }
+      };
+    }
+    return registerSystem(name, def);
+  };
+  AFRAME.registerComponent = (name, def) => {
+    if (def.tick) {
+      const init = def.init;
+      def.init = function() {
+        if (init) {
+          init.apply(this, arguments);
+        }
+        if (this.tick !== AFRAME.utils.throttleTick) {
+          this.tick = AFRAME.utils.throttleTick(this.tick, 1000 / maxFPS, this);
+        }
+      };
+    }
+    return registerComponent(name, def);
+  };
+}
+
 export function getCurrentHubId() {
   const qs = new URLSearchParams(location.search);
   const defaultRoomId = configs.feature("default_room_id");
